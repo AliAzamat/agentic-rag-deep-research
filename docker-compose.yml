@@ -1,0 +1,57 @@
+services:
+  vllm:
+    image: vllm/vllm-openai:v0.9.2
+    command: ["/bin/bash", "/opt/serving/launch.sh"]
+    volumes:
+      - ./serving/vllm:/opt/serving:ro
+      - hf-cache:/root/.cache/huggingface
+    environment:
+      RESEARCH_MODEL: Qwen/Qwen3-8B-Instruct
+      HF_TOKEN: ${HF_TOKEN}
+    ports:
+      - "8000:8000"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    healthcheck:
+      # /health is not enough — it returns OK before weights finish loading.
+      test: ["CMD", "curl", "-f", "http://localhost:8000/v1/models"]
+      interval: 15s
+      timeout: 5s
+      retries: 40
+
+  qdrant:
+    image: qdrant/qdrant:v1.14.0
+    ports:
+      - "6333:6333"
+    volumes:
+      - qdrant-storage:/qdrant/storage
+
+  langfuse:
+    image: langfuse/langfuse:3
+    depends_on: [langfuse-db]
+    environment:
+      DATABASE_URL: postgresql://langfuse:langfuse@langfuse-db:5432/langfuse
+      NEXTAUTH_URL: http://localhost:3000
+      NEXTAUTH_SECRET: ${LANGFUSE_NEXTAUTH_SECRET}
+      SALT: ${LANGFUSE_SALT}
+    ports:
+      - "3000:3000"
+
+  langfuse-db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: langfuse
+      POSTGRES_PASSWORD: langfuse
+      POSTGRES_DB: langfuse
+    volumes:
+      - langfuse-db:/var/lib/postgresql/data
+
+volumes:
+  hf-cache:
+  qdrant-storage:
+  langfuse-db:
