@@ -71,9 +71,3 @@ The eval and report entry points are `python -m research.eval.run` and `python -
 [FINDINGS.md](FINDINGS.md) is a write-up of an evaluation comparing single-shot, agentic, and routed strategies on multi-hop and single-hop questions, including cost, latency, and stop-reason breakdowns, along with guidance on when not to use agentic retrieval.
 
 > The data behind that write-up isn't in this repository: `data/corpus.jsonl` contains 5 sample passages (the write-up describes 4,200), and `data/eval_questions.jsonl` and `results/` aren't committed. The results can't be reproduced from a clone until those are added.
-
-## Status and limitations
-
-- **No dependency file.** Install the packages listed above manually.
-- **Eval dataset and full corpus not included** (see *Results*).
-- Running the full stack requires a GPU sized for an 8B model; the lexical citation check is a cheap guard against mis-cited passages, not proof of support.
